@@ -3,7 +3,10 @@ import os
 import re
 from math import log
 from codecs import open
+from random import randrange, shuffle
 from collections import defaultdict
+
+K = 0.5
 
 
 def train(samples):
@@ -48,15 +51,19 @@ def main():
         if entry.is_file()
     )
     features += [(get_features(feat), 'spam') for feat in spams]
+    shuffle(features)
+    samples = []
+    for _ in range(round(len(features) * K)):
+        samples.append(features.pop(randrange(len(features))))
+
     classifier = train(features)
 
-    samples = (
-        (open(entry.path, 'r', 'utf-8', 'ignore').read(), entry.name)
-        for entry in os.scandir(r'data/test')
-        if entry.is_file()
-    )
-    for sample, name in samples:
-        print(name + ': ', classify(classifier, get_features(sample)))
+    mistakes = sum(map(
+        lambda sample: 0 if classify(classifier, sample[0]) == sample[1] else 1,
+        samples
+    ))
+    print(mistakes, mistakes/len(samples))
+
 
 if __name__ == '__main__':
     main()
